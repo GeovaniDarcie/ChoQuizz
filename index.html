@@ -445,8 +445,9 @@ function renderEditor(){
         <button class="link-btn" onclick="removeQuestion(${qi})">remover</button>
       </div>
       <input type="text" value="${escapeAttr(q.text)}" oninput="setQuestionText(${qi},this.value)" placeholder="Digite a pergunta">
-      <label style="margin-top:-4px;">Imagem (opcional — cole o link de uma imagem já hospedada)</label>
-      <input type="text" value="${escapeAttr(q.imageUrl || '')}" oninput="setImageUrl(${qi},this.value)" onblur="renderEditor()" placeholder="https://exemplo.com/minha-imagem.jpg">
+      <label style="margin-top:-4px;">Imagem (opcional)</label>
+      <input type="file" accept="image/*" onchange="handleImageUpload(${qi}, this)">
+      <div id="upload-status-${qi}" style="font-size:12px;color:var(--muted);margin:-6px 0 10px;"></div>
       ${imgPreview}
       ${optsHtml}
     `;
@@ -458,6 +459,39 @@ function setQuestionText(qi, val){ DRAFT_QUESTIONS[qi].text = val; }
 function setImageUrl(qi, val){ DRAFT_QUESTIONS[qi].imageUrl = val; }
 function setOptionText(qi, oi, val){ DRAFT_QUESTIONS[qi].options[oi] = val; }
 function setCorrect(qi, oi){ DRAFT_QUESTIONS[qi].correct = oi; }
+
+// ---------- upload de imagem (Supabase Storage) ----------
+async function handleImageUpload(qi, inputEl){
+  const file = inputEl.files[0];
+  if(!file) return;
+  const statusEl = document.getElementById(`upload-status-${qi}`);
+  statusEl.textContent = 'Enviando imagem…';
+  try{
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const path = `q-${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
+    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/quiz-images/${path}`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': file.type || 'image/jpeg'
+      },
+      body: file
+    });
+    if(!res.ok){
+      statusEl.textContent = 'Falha ao enviar imagem. Confira o bucket "quiz-images" no Supabase.';
+      console.error('upload falhou', res.status, await res.text());
+      return;
+    }
+    const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/quiz-images/${path}`;
+    DRAFT_QUESTIONS[qi].imageUrl = publicUrl;
+    statusEl.textContent = 'Imagem enviada!';
+    renderEditor();
+  }catch(e){
+    statusEl.textContent = 'Erro ao enviar imagem.';
+    console.error('handleImageUpload falhou', e);
+  }
+}
 function addQuestion(){
   DRAFT_QUESTIONS.push({ text:'', options:['','','',''], correct:0, imageUrl:'' });
   renderEditor();
