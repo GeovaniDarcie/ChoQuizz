@@ -112,7 +112,7 @@
   .btn-danger{ background:transparent; color:var(--coral); border:1.5px solid rgba(255,107,106,0.4); }
   .btn:disabled{ opacity:0.5; cursor:not-allowed; }
 
-  input[type=text], input[type=password], input[type=file], textarea{
+  input[type=text], textarea{
     width:100%;
     padding:14px 16px;
     border-radius:12px;
@@ -124,7 +124,7 @@
     margin-bottom:12px;
     outline:none;
   }
-  input[type=text]:focus, input[type=password]:focus, textarea:focus{ border-color:var(--gold); }
+  input[type=text]:focus, textarea:focus{ border-color:var(--gold); }
   input::placeholder, textarea::placeholder{ color: rgba(255,255,255,0.68); opacity:1; }
   label{ font-size:13px; color:var(--muted); font-weight:600; display:block; margin-bottom:6px; }
 
@@ -144,7 +144,7 @@
 
   #questions-editor{
     display:grid;
-    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap:16px;
   }
   .qcard{
@@ -157,46 +157,11 @@
   }
   .qcard-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
   .qcard-head span{ font-size:13px; color:var(--muted); font-weight:600; }
-  .opt-grid{ display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:10px; }
-  .opt-row{ display:flex; gap:10px; align-items:center; margin-bottom:0; min-width:0; }
-  .opt-row input[type=text]{ margin-bottom:0; min-width:0; font-size:16px; padding:16px 16px; }
-  .opt-radio{ width:24px; height:24px; accent-color: var(--gold); flex-shrink:0; }
-  .opt-remove-btn{
-    background:rgba(255,255,255,0.14);
-    border:none;
-    color:#FFFFFF;
-    width:30px;
-    height:30px;
-    border-radius:8px;
-    font-weight:800;
-    font-size:14px;
-    cursor:pointer;
-    flex-shrink:0;
-  }
-  .opt-remove-btn:hover{ background:rgba(255,82,82,0.4); }
-
-  .avatar-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-bottom:16px; }
-  .avatar-option{
-    background:var(--bg2);
-    border:2px solid transparent;
-    border-radius:14px;
-    padding:8px;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    transition: all 0.15s ease;
-  }
-  .avatar-option:hover{ background:rgba(255,255,255,0.1); }
-  .avatar-option.selected{ border-color:var(--gold); background:rgba(255,201,60,0.18); }
-  .avatar-option svg{ width:100%; height:auto; display:block; }
-  .avatar-mini{ display:inline-block; width:22px; height:22px; flex-shrink:0; vertical-align:middle; overflow:visible; }
-  .avatar-mini svg{ width:100%; height:100%; display:block; }
-  .avatar-wiggle{ display:block; width:100%; height:100%; animation: avatarWiggle 1.6s ease-in-out infinite; transform-origin: 50% 85%; }
-  @keyframes avatarWiggle{
-    0%, 100% { transform: rotate(-4deg) translateY(0); }
-    50% { transform: rotate(4deg) translateY(-2px); }
-  }
+  .opt-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:8px 12px; margin-bottom:8px; }
+  @media (max-width: 420px){ .opt-grid{ grid-template-columns: 1fr; } }
+  .opt-row{ display:flex; gap:8px; align-items:center; margin-bottom:0; min-width:0; }
+  .opt-row input[type=text]{ margin-bottom:0; min-width:0; }
+  .opt-radio{ width:20px; height:20px; accent-color: var(--gold); flex-shrink:0; }
   .link-btn{ background:rgba(255,255,255,0.16); border:none; color:#FFFFFF; font-size:13px; font-weight:700; cursor:pointer; padding:5px 12px; border-radius:8px; }
   .link-btn:hover{ background:rgba(255,255,255,0.28); }
 
@@ -362,22 +327,8 @@
     <h1 class="display">Time do Suporte SW</h1>
     <p class="sub">Crie uma sala e compartilhe o código, ou entre em uma sala existente para jogar.</p>
     <div class="card marquee">
-      <button class="btn btn-primary" onclick="goToCreateScreen()">🎬 Criar uma sala</button>
+      <button class="btn btn-primary" onclick="goTo('screen-create'); loadSavedQuizzes(); loadSavedRooms();">🎬 Criar uma sala</button>
       <button class="btn btn-secondary" onclick="goTo('screen-join')">🎮 Entrar em uma sala</button>
-    </div>
-  </div>
-
-  <!-- HOST PASSWORD -->
-  <div class="screen" id="screen-host-password">
-    <div class="eyebrow">Área do host</div>
-    <h2 class="display">Senha de criação</h2>
-    <div class="card">
-      <p class="sub" style="margin-top:-4px;">Essa senha protege os quizzes já salvos, pra jogadores curiosos não verem as perguntas com as respostas certas.</p>
-      <label>Senha</label>
-      <input type="password" id="host-password-input" placeholder="Digite a senha" onkeydown="if(event.key==='Enter') checkHostPassword()">
-      <button class="btn btn-primary" onclick="checkHostPassword()">Entrar</button>
-      <div id="host-password-error" style="color:var(--coral); font-size:13px; margin-top:6px;"></div>
-      <button class="btn btn-secondary" style="background:transparent;border:none;color:var(--muted)" onclick="cancelHostPassword()">Voltar</button>
     </div>
   </div>
 
@@ -447,8 +398,6 @@
     <div class="eyebrow">Entrar</div>
     <h2 class="display">Qual é o seu nome?</h2>
     <div class="card">
-      <label>Escolha seu bonequinho</label>
-      <div class="avatar-grid" id="avatar-grid"></div>
       <label>Seu nome</label>
       <input type="text" id="player-name" placeholder="Ex: Maria" maxlength="20">
       <label>Código da sala</label>
@@ -518,39 +467,6 @@ let POLL_TIMER = null;
 let DRAFT_QUESTIONS = [];
 let LAST_PLAYER_QI = -1;
 
-// troque essa senha pela que você quiser usar
-const HOST_PASSWORD = 'suporte123';
-let HOST_UNLOCKED = false;
-let PENDING_TEMPLATE_INDEX = null;
-
-function goToCreateScreen(){
-  goTo('screen-create');
-  loadSavedQuizzes();
-  loadSavedRooms();
-}
-function askHostPasswordFor(templateIndex){
-  PENDING_TEMPLATE_INDEX = templateIndex;
-  document.getElementById('host-password-input').value = '';
-  document.getElementById('host-password-error').textContent = '';
-  goTo('screen-host-password');
-}
-function cancelHostPassword(){
-  PENDING_TEMPLATE_INDEX = null;
-  goTo('screen-create');
-}
-function checkHostPassword(){
-  const val = document.getElementById('host-password-input').value;
-  if(val === HOST_PASSWORD){
-    HOST_UNLOCKED = true;
-    const idx = PENDING_TEMPLATE_INDEX;
-    PENDING_TEMPLATE_INDEX = null;
-    goTo('screen-create');
-    if(idx !== null) applyTemplate(idx);
-  } else {
-    document.getElementById('host-password-error').textContent = 'Senha incorreta.';
-  }
-}
-
 function goTo(id){
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -565,67 +481,6 @@ function genCode(){
 function genId(){
   return 'p' + Math.random().toString(36).slice(2,10);
 }
-
-// ---------- avatares (bonequinhos originais, com corpo, braços e pernas) ----------
-function avatarBody(color){
-  return `
-    <line x1="15" y1="31" x2="6" y2="43" stroke="${color}" stroke-width="6" stroke-linecap="round"/>
-    <line x1="33" y1="31" x2="42" y2="43" stroke="${color}" stroke-width="6" stroke-linecap="round"/>
-    <line x1="19" y1="48" x2="15" y2="62" stroke="${color}" stroke-width="6" stroke-linecap="round"/>
-    <line x1="29" y1="48" x2="33" y2="62" stroke="${color}" stroke-width="6" stroke-linecap="round"/>
-    <rect x="14" y="25" width="20" height="25" rx="10" fill="${color}"/>`;
-}
-function avatarHead(color, mouth){
-  return `
-    <circle cx="24" cy="15" r="13" fill="${color}"/>
-    <circle cx="19" cy="13" r="2.2" fill="#241703"/>
-    <circle cx="29" cy="13" r="2.2" fill="#241703"/>
-    ${mouth}`;
-}
-function avatarFace(color, mouth, decoration){
-  return `${avatarBody(color)}${decoration || ''}${avatarHead(color, mouth)}`;
-}
-const SMILE = `<path d="M18.5 18.5q5.5 6 11 0" stroke="#241703" stroke-width="2" fill="none" stroke-linecap="round"/>`;
-const OPEN_SMILE = `<path d="M18.5 18q5.5 7 11 0" fill="#241703"/>`;
-const AVATAR_VIEWBOX = '0 -10 48 74';
-const AVATARS = [
-  { id:'a1', label:'Solzinho', svg: `<svg viewBox="${AVATAR_VIEWBOX}">${avatarFace('#FFC93C', SMILE, `<g>${[0,45,90,135,180,225,270,315].map(a=>`<rect x="22.5" y="-8" width="3" height="8" rx="1.5" fill="#FFC93C" transform="rotate(${a} 24 15)"/>`).join('')}</g>`)}</svg>` },
-  { id:'a2', label:'Verdinho', svg: `<svg viewBox="${AVATAR_VIEWBOX}">${avatarFace('#4CAF50', SMILE)}</svg>` },
-  { id:'a3', label:'Azulzinho', svg: `<svg viewBox="${AVATAR_VIEWBOX}">${avatarFace('#42A5F5', OPEN_SMILE)}</svg>` },
-  { id:'a4', label:'Gatinho', svg: `<svg viewBox="${AVATAR_VIEWBOX}">${avatarFace('#FF8A65', SMILE, `<path d="M11 3 L17 13 L8 13 Z" fill="#FF8A65"/><path d="M37 3 L31 13 L40 13 Z" fill="#FF8A65"/>`)}</svg>` },
-  { id:'a5', label:'Roxinho', svg: `<svg viewBox="${AVATAR_VIEWBOX}">${avatarFace('#AB47BC', SMILE)}</svg>` },
-  { id:'a6', label:'Coelhinho', svg: `<svg viewBox="${AVATAR_VIEWBOX}">${avatarFace('#EC407A', OPEN_SMILE, `<rect x="14" y="-9" width="6" height="18" rx="3" fill="#EC407A"/><rect x="28" y="-9" width="6" height="18" rx="3" fill="#EC407A"/>`)}</svg>` },
-  { id:'a7', label:'Ciano', svg: `<svg viewBox="${AVATAR_VIEWBOX}">${avatarFace('#26C6DA', SMILE)}</svg>` },
-  { id:'a8', label:'Nuvem', svg: `<svg viewBox="${AVATAR_VIEWBOX}">${avatarFace('#90CAF9', SMILE, `<ellipse cx="12" cy="17" rx="7" ry="6" fill="#90CAF9"/><ellipse cx="36" cy="17" rx="7" ry="6" fill="#90CAF9"/>`)}</svg>` },
-];
-let SELECTED_AVATAR = AVATARS[0].id;
-
-function renderAvatarGrid(){
-  const grid = document.getElementById('avatar-grid');
-  if(!grid) return;
-  grid.innerHTML = AVATARS.map((a, i) => `
-    <div class="avatar-option${a.id===SELECTED_AVATAR ? ' selected' : ''}" title="${a.label}" onclick="selectAvatar('${a.id}')">
-      <span class="avatar-wiggle" style="animation-delay:${(i*0.13).toFixed(2)}s;">${a.svg}</span>
-    </div>
-  `).join('');
-}
-function selectAvatar(id){
-  SELECTED_AVATAR = id;
-  renderAvatarGrid();
-}
-function avatarSvgById(id){
-  const a = AVATARS.find(x => x.id === id);
-  return a ? a.svg : AVATARS[0].svg;
-}
-function avatarMini(id, width){
-  width = width || 22;
-  const height = Math.round(width * 1.45);
-  const idx = Math.max(0, AVATARS.findIndex(a => a.id === id));
-  const delay = (idx * 0.13).toFixed(2);
-  return `<span class="avatar-mini" style="width:${width}px;height:${height}px;"><span class="avatar-wiggle" style="animation-delay:${delay}s;">${avatarSvgById(id)}</span></span>`;
-}
-document.addEventListener('DOMContentLoaded', renderAvatarGrid);
-renderAvatarGrid();
 
 // ---------- som de transição (composição original, sem direitos de terceiros) ----------
 function playTransitionSound(){
@@ -718,7 +573,6 @@ function renderEditor(){
         <div class="opt-row">
           <input type="radio" class="opt-radio" name="correct-${qi}" ${oi===q.correct?'checked':''} onchange="setCorrect(${qi},${oi})">
           <input type="text" value="${escapeAttr(opt)}" oninput="setOptionText(${qi},${oi},this.value)" placeholder="Opção ${oi+1}">
-          ${q.options.length > 2 ? `<button type="button" class="opt-remove-btn" title="Remover opção" onclick="removeOption(${qi},${oi})">✕</button>` : ''}
         </div>`;
     });
     div.innerHTML = `
@@ -728,7 +582,6 @@ function renderEditor(){
       </div>
       <input type="text" value="${escapeAttr(q.text)}" oninput="setQuestionText(${qi},this.value)" placeholder="Digite a pergunta">
       <div class="opt-grid">${optsHtml}</div>
-      <button type="button" class="link-btn" style="margin-top:6px;" onclick="addOption(${qi})">+ Adicionar opção</button>
     `;
     wrap.appendChild(div);
   });
@@ -737,18 +590,6 @@ function escapeAttr(s){ return (s||'').replace(/"/g,'&quot;'); }
 function setQuestionText(qi, val){ DRAFT_QUESTIONS[qi].text = val; }
 function setOptionText(qi, oi, val){ DRAFT_QUESTIONS[qi].options[oi] = val; }
 function setCorrect(qi, oi){ DRAFT_QUESTIONS[qi].correct = oi; }
-function addOption(qi){
-  DRAFT_QUESTIONS[qi].options.push('');
-  renderEditor();
-}
-function removeOption(qi, oi){
-  const q = DRAFT_QUESTIONS[qi];
-  if(q.options.length <= 2) return;
-  q.options.splice(oi, 1);
-  if(q.correct === oi) q.correct = 0;
-  else if(q.correct > oi) q.correct -= 1;
-  renderEditor();
-}
 
 function addQuestion(){
   DRAFT_QUESTIONS.push({ text:'', options:['','','',''], correct:0 });
@@ -776,8 +617,7 @@ const SUPABASE_HEADERS = {
 async function kvGet(key){
   try{
     const res = await fetch(`${SUPABASE_TABLE}?key=eq.${encodeURIComponent(key)}&select=value`, {
-      headers: SUPABASE_HEADERS,
-      cache: 'no-store'
+      headers: SUPABASE_HEADERS
     });
     if(!res.ok) return null;
     const rows = await res.json();
@@ -787,7 +627,7 @@ async function kvGet(key){
 
 async function kvSet(key, value){
   try{
-    const res = await fetch(`${SUPABASE_TABLE}?on_conflict=key`, {
+    const res = await fetch(SUPABASE_TABLE, {
       method: 'POST',
       headers: { ...SUPABASE_HEADERS, 'Prefer': 'resolution=merge-duplicates' },
       body: JSON.stringify({ key, value })
@@ -836,8 +676,7 @@ async function getAllPlayers(code){
   try{
     const prefix = `quiz:${code}:player:`;
     const res = await fetch(`${SUPABASE_TABLE}?key=like.${encodeURIComponent(prefix)}*&select=key,value`, {
-      headers: SUPABASE_HEADERS,
-      cache: 'no-store'
+      headers: SUPABASE_HEADERS
     });
     if(!res.ok) return [];
     const rows = await res.json();
@@ -852,8 +691,7 @@ async function getAllPlayers(code){
 async function kvListWithValues(prefix){
   try{
     const res = await fetch(`${SUPABASE_TABLE}?key=like.${encodeURIComponent(prefix)}*&select=key,value`, {
-      headers: SUPABASE_HEADERS,
-      cache: 'no-store'
+      headers: SUPABASE_HEADERS
     });
     if(!res.ok) return [];
     const rows = await res.json();
@@ -880,13 +718,6 @@ async function loadSavedQuizzes(){
   `).join('');
 }
 function useTemplate(i){
-  if(!HOST_UNLOCKED){
-    askHostPasswordFor(i);
-    return;
-  }
-  applyTemplate(i);
-}
-function applyTemplate(i){
   const t = SAVED_TEMPLATES[i];
   if(!t) return;
   document.getElementById('quiz-title').value = t.value.title;
@@ -909,8 +740,7 @@ async function loadSavedRooms(){
   listEl.innerHTML = '<span class="empty-msg">Carregando…</span>';
   try{
     const res = await fetch(`${SUPABASE_TABLE}?key=like.${encodeURIComponent('quiz:*:meta')}&select=key,value`, {
-      headers: SUPABASE_HEADERS,
-      cache: 'no-store'
+      headers: SUPABASE_HEADERS
     });
     if(!res.ok){ listEl.innerHTML = '<span class="empty-msg">Não deu pra carregar as salas.</span>'; return; }
     const rows = await res.json();
@@ -994,7 +824,7 @@ async function hostTick(){
     if(players.length === 0){
       listEl.innerHTML = '<span class="empty-msg">Aguardando jogadores…</span>';
     } else {
-      listEl.innerHTML = players.map(p => `<span class="player-chip">${avatarMini(p.avatar)} ${escapeHtml(p.name)}</span>`).join('');
+      listEl.innerHTML = players.map(p => `<span class="player-chip">${escapeHtml(p.name)}</span>`).join('');
     }
     document.getElementById('btn-start-quiz').disabled = players.length === 0;
   }
@@ -1103,7 +933,7 @@ async function joinRoom(){
   PLAYER_NAME = name;
   PLAYER_ID = genId();
 
-  await playerSet(code, PLAYER_ID, { name, avatar: SELECTED_AVATAR, answers: {}, score: 0, joinedAt: Date.now() });
+  await playerSet(code, PLAYER_ID, { name, answers: {}, score: 0, joinedAt: Date.now() });
 
   goTo('screen-player-wait');
   startPlayerPolling();
@@ -1250,7 +1080,7 @@ function renderQuestionBreakdown(elId, players, qi, highlightKey){
       <div class="leaderboard-row" style="${p.id===highlightKey?'border:1px solid var(--gold);':''}">
         <span class="rank-num">${i+1}</span>
         <span style="width:22px; text-align:center;">${icon}</span>
-        <span class="rank-name">${avatarMini(p.avatar, 14)} ${escapeHtml(p.name)}</span>
+        <span class="rank-name">${escapeHtml(p.name)}</span>
         <span class="rank-score">${fmtPts(p.score)}</span>
       </div>`;
   }).join('');
@@ -1273,7 +1103,6 @@ function renderLeaderboard(elId, players, highlightKey){
     return `
       <div class="podium-col">
         ${place === 1 ? '<div class="podium-trophy">🏆</div>' : ''}
-        <div style="margin:0 auto 2px;">${avatarMini(p.avatar, 30)}</div>
         <div class="podium-name">${escapeHtml(p.name)}</div>
         <div class="podium-score">${fmtPts(p.score)}</div>
         <div class="podium-block place-${place}">${place}</div>
@@ -1286,7 +1115,7 @@ function renderLeaderboard(elId, players, highlightKey){
     html += rest.map((p, i) => `
       <div class="leaderboard-row" style="${p.id===highlightKey?'border:1px solid var(--gold);':''}">
         <span class="rank-num">${i+4}</span>
-        <span class="rank-name">${avatarMini(p.avatar)} ${escapeHtml(p.name)}</span>
+        <span class="rank-name">${escapeHtml(p.name)}</span>
         <span class="rank-score">${fmtPts(p.score)}</span>
       </div>
     `).join('');
