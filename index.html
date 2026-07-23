@@ -390,7 +390,7 @@
     <div class="eyebrow">Área do host</div>
     <h2 class="display">Senha de criação</h2>
     <div class="card">
-      <p class="sub" style="margin-top:-4px;">Essa senha protege os quizzes já salvos, pra jogadores curiosos não verem as perguntas com as respostas certas.</p>
+      <p class="sub" style="margin-top:-4px;">Este quiz foi salvo com uma senha. Digite a senha que você definiu na hora de criá-lo.</p>
       <label>Senha</label>
       <input type="password" id="host-password-input" placeholder="Digite a senha" onkeydown="if(event.key==='Enter') checkHostPassword()">
       <button class="btn btn-primary" onclick="checkHostPassword()">Entrar</button>
@@ -406,10 +406,10 @@
     <div class="card">
       <label>Quizzes salvos (clique pra reaproveitar)</label>
       <div class="players-list" id="saved-quizzes-list"><span class="empty-msg">Nenhum quiz salvo ainda.</span></div>
-      <label>Salas já criadas</label>
-      <div class="players-list" id="saved-rooms-list"><span class="empty-msg">Nenhuma sala criada ainda.</span></div>
       <label>Título do quiz</label>
       <input type="text" id="quiz-title" value="Shoquizz">
+      <label>🔒 Senha pra proteger este quiz salvo (opcional)</label>
+      <input type="password" id="quiz-template-password" placeholder="Deixe em branco pra não proteger">
       <label>🎵 Música do YouTube (opcional — toca só na tela do host)</label>
       <input type="text" id="quiz-youtube-url" placeholder="Cole aqui o link do YouTube">
       <label>⏱ Tempo por pergunta (segundos)</label>
@@ -538,14 +538,15 @@ let POLL_TIMER = null;
 let DRAFT_QUESTIONS = [];
 let LAST_PLAYER_QI = -1;
 let HOST_TIMER_INTERVAL = null;
-let HOST_TIMER_QI = -1;
+let HOST_TIMER_KEY = null;
 let PLAYER_TIMER_INTERVAL = null;
-let PLAYER_TIMER_QI = -1;
+let PLAYER_TIMER_KEY = null;
 
 function startHostTimer(meta, qi){
-  if(HOST_TIMER_QI === qi) return;
+  const key = `${ROOM_CODE}:${qi}`;
+  if(HOST_TIMER_KEY === key) return;
   clearInterval(HOST_TIMER_INTERVAL);
-  HOST_TIMER_QI = qi;
+  HOST_TIMER_KEY = key;
   const timeLimit = meta.timeLimit || 20;
   const startedAt = meta.questionStartedAt || Date.now();
   const tick = () => {
@@ -563,9 +564,10 @@ function startHostTimer(meta, qi){
 }
 
 function startPlayerTimer(meta, qi){
-  if(PLAYER_TIMER_QI === qi) return;
+  const key = `${ROOM_CODE}:${qi}`;
+  if(PLAYER_TIMER_KEY === key) return;
   clearInterval(PLAYER_TIMER_INTERVAL);
-  PLAYER_TIMER_QI = qi;
+  PLAYER_TIMER_KEY = key;
   const timeLimit = meta.timeLimit || 20;
   const startedAt = meta.questionStartedAt || Date.now();
   const tick = () => {
@@ -602,15 +604,11 @@ async function handlePlayerTimeout(qi){
 }
 
 
-// troque essa senha pela que você quiser usar
-const HOST_PASSWORD = 'suporte123';
-let HOST_UNLOCKED = false;
 let PENDING_TEMPLATE_INDEX = null;
 
 function goToCreateScreen(){
   goTo('screen-create');
   loadSavedQuizzes();
-  loadSavedRooms();
 }
 function askHostPasswordFor(templateIndex){
   PENDING_TEMPLATE_INDEX = templateIndex;
@@ -624,12 +622,12 @@ function cancelHostPassword(){
 }
 function checkHostPassword(){
   const val = document.getElementById('host-password-input').value;
-  if(val === HOST_PASSWORD){
-    HOST_UNLOCKED = true;
+  const t = SAVED_TEMPLATES[PENDING_TEMPLATE_INDEX];
+  if(t && val === (t.value.password || '')){
     const idx = PENDING_TEMPLATE_INDEX;
     PENDING_TEMPLATE_INDEX = null;
     goTo('screen-create');
-    if(idx !== null) applyTemplate(idx);
+    applyTemplate(idx);
   } else {
     document.getElementById('host-password-error').textContent = 'Senha incorreta.';
   }
@@ -787,6 +785,15 @@ function playClickSound(){
 function defaultQuestions(){
   return [
     { text: 'Qual é o maior planeta do Sistema Solar?', options: ['Terra','Júpiter','Saturno','Marte'], correct: 1 },
+    { text: 'Quem pintou a Mona Lisa?', options: ['Van Gogh','Picasso','Leonardo da Vinci','Michelangelo'], correct: 2 },
+    { text: 'Qual é o maior oceano do mundo?', options: ['Atlântico','Índico','Ártico','Pacífico'], correct: 3 },
+    { text: 'Em que ano começou a Segunda Guerra Mundial?', options: ['1935','1939','1941','1945'], correct: 1 },
+    { text: 'Qual é o elemento químico mais abundante no universo?', options: ['Oxigênio','Hidrogênio','Carbono','Hélio'], correct: 1 },
+    { text: 'Qual país tem a maior população do mundo?', options: ['Estados Unidos','Índia','China','Indonésia'], correct: 1 },
+    { text: 'Quantos ossos tem o corpo humano adulto?', options: ['186','206','226','246'], correct: 1 },
+    { text: 'Qual é o rio mais longo do mundo?', options: ['Nilo','Amazonas','Yangtzé','Mississippi'], correct: 1 },
+    { text: 'Quem escreveu "Dom Casmurro"?', options: ['José de Alencar','Machado de Assis','Clarice Lispector','Guimarães Rosa'], correct: 1 },
+    { text: 'Qual é a capital da Austrália?', options: ['Sydney','Melbourne','Canberra','Perth'], correct: 2 },
   ];
 }
 
@@ -958,13 +965,15 @@ async function loadSavedQuizzes(){
   }
   listEl.innerHTML = SAVED_TEMPLATES.map((t, i) => `
     <span class="player-chip" style="display:inline-flex; align-items:center; gap:8px;">
-      <button type="button" style="background:none;border:none;color:inherit;font:inherit;cursor:pointer;padding:0;" onclick="useTemplate(${i})">${escapeHtml(t.value.title)}</button>
+      <button type="button" style="background:none;border:none;color:inherit;font:inherit;cursor:pointer;padding:0;" onclick="useTemplate(${i})">${t.value.password ? '🔒 ' : ''}${escapeHtml(t.value.title)}</button>
       <button type="button" title="Excluir" style="background:none;border:none;color:inherit;cursor:pointer;padding:0;font-weight:800;" onclick="deleteTemplate(${i})">✕</button>
     </span>
   `).join('');
 }
 function useTemplate(i){
-  if(!HOST_UNLOCKED){
+  const t = SAVED_TEMPLATES[i];
+  if(!t) return;
+  if(t.value.password){
     askHostPasswordFor(i);
     return;
   }
@@ -983,49 +992,6 @@ async function deleteTemplate(i){
   if(!confirm(`Excluir o quiz salvo "${t.value.title}"?`)) return;
   await kvDeleteExact(t.key);
   loadSavedQuizzes();
-}
-
-// ---------- salas já criadas (excluir salas antigas) ----------
-let SAVED_ROOMS = [];
-async function loadSavedRooms(){
-  const listEl = document.getElementById('saved-rooms-list');
-  if(!listEl) return;
-  listEl.innerHTML = '<span class="empty-msg">Carregando…</span>';
-  try{
-    const res = await fetch(`${SUPABASE_TABLE}?key=like.${encodeURIComponent('quiz:*:meta')}&select=key,value`, {
-      headers: SUPABASE_HEADERS,
-      cache: 'no-store'
-    });
-    if(!res.ok){ listEl.innerHTML = '<span class="empty-msg">Não deu pra carregar as salas.</span>'; return; }
-    const rows = await res.json();
-    SAVED_ROOMS = rows.map(r => ({ key: r.key, value: JSON.parse(r.value) }));
-  }catch(e){
-    console.error('loadSavedRooms falhou', e);
-    SAVED_ROOMS = [];
-  }
-  SAVED_ROOMS.sort((a,b) => (b.value.createdAt||0) - (a.value.createdAt||0));
-  if(SAVED_ROOMS.length === 0){
-    listEl.innerHTML = '<span class="empty-msg">Nenhuma sala criada ainda.</span>';
-    return;
-  }
-  const statusLabel = { lobby: 'aguardando', active: 'em andamento', ended: 'encerrada' };
-  listEl.innerHTML = SAVED_ROOMS.map((r, i) => {
-    const code = r.key.split(':')[1];
-    return `
-      <span class="player-chip" style="display:inline-flex; align-items:center; gap:8px;">
-        ${escapeHtml(r.value.title)} · ${code} (${statusLabel[r.value.status] || r.value.status})
-        <button type="button" title="Excluir sala" style="background:none;border:none;color:inherit;cursor:pointer;padding:0;font-weight:800;" onclick="deleteRoom(${i})">✕</button>
-      </span>`;
-  }).join('');
-}
-async function deleteRoom(i){
-  const r = SAVED_ROOMS[i];
-  if(!r) return;
-  const code = r.key.split(':')[1];
-  if(!confirm(`Excluir a sala "${r.value.title}" (código ${code})? Isso também apaga os jogadores dela.`)) return;
-  await kvDeleteExact(r.key);
-  await kvDeletePrefix(`quiz:${code}:player:`);
-  loadSavedRooms();
 }
 
 
@@ -1055,8 +1021,9 @@ async function createRoom(){
   await metaSet(code, meta);
 
   // salva as perguntas como um modelo reaproveitável pra próximas salas
+  const templatePassword = document.getElementById('quiz-template-password').value.trim();
   const templateKey = `template:${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
-  await kvSet(templateKey, JSON.stringify({ title, questions: cleanQuestions, savedAt: Date.now() }));
+  await kvSet(templateKey, JSON.stringify({ title, questions: cleanQuestions, password: templatePassword || null, savedAt: Date.now() }));
 
   document.getElementById('lobby-title').textContent = title;
   document.getElementById('room-code-display').textContent = code;
