@@ -197,6 +197,33 @@
     0%, 100% { transform: rotate(-4deg) translateY(0); }
     50% { transform: rotate(4deg) translateY(-2px); }
   }
+  .avatar-preview-wrap{ display:flex; justify-content:center; margin-bottom:14px; }
+  .avatar-preview{ width:96px; height:160px; }
+  .avatar-preview svg{ width:100%; height:100%; display:block; }
+  .accessory-tabs{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+  .accessory-tab{
+    background:var(--bg2);
+    border:2px solid transparent;
+    border-radius:100px;
+    color:var(--text);
+    padding:8px 14px;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .accessory-tab.active{ border-color:var(--gold); background:rgba(255,201,60,0.22); }
+  .accessory-options{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .accessory-opt-btn{
+    background:var(--bg2);
+    border:2px solid transparent;
+    border-radius:10px;
+    color:var(--text);
+    padding:8px 12px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .accessory-opt-btn.active{ border-color:var(--gold); background:rgba(255,201,60,0.2); }
   .link-btn{ background:rgba(255,255,255,0.16); border:none; color:#FFFFFF; font-size:13px; font-weight:700; cursor:pointer; padding:5px 12px; border-radius:8px; }
   .link-btn:hover{ background:rgba(255,255,255,0.28); }
 
@@ -469,6 +496,10 @@
     <div class="card">
       <label>Escolha seu suportinho</label>
       <div class="avatar-grid" id="avatar-grid"></div>
+      <div class="avatar-preview-wrap"><div class="avatar-preview" id="avatar-preview"></div></div>
+      <label>Personalize (opcional)</label>
+      <div class="accessory-tabs" id="accessory-tabs"></div>
+      <div class="accessory-options" id="accessory-options"></div>
       <label>Seu nome</label>
       <input type="text" id="player-name" placeholder="Ex: Maria" maxlength="20">
       <label>Código da sala</label>
@@ -592,7 +623,7 @@ async function handlePlayerTimeout(qi){
   if(me && me.answers && me.answers[qi]) return; // já tinha respondido a tempo
   const optsEl = document.getElementById('player-options');
   if(optsEl) optsEl.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
-  const data = me || { name: PLAYER_NAME, avatar: SELECTED_AVATAR, answers:{}, score:0 };
+  const data = me || { name: PLAYER_NAME, avatar: SELECTED_AVATAR, accessories: {...SELECTED_ACCESSORIES}, answers:{}, score:0 };
   data.answers[qi] = { selected: -1, correct: false, score: 0 };
   data.score = Object.values(data.answers).reduce((s,a)=>s+a.score, 0);
   await playerSet(ROOM_CODE, PLAYER_ID, data);
@@ -669,45 +700,189 @@ function avatarFace(color, mouth, decoration){
 }
 const SMILE = `<path d="M18.5 18.5q5.5 6 11 0" stroke="#241703" stroke-width="2" fill="none" stroke-linecap="round"/>`;
 const OPEN_SMILE = `<path d="M18.5 18q5.5 7 11 0" fill="#241703"/>`;
-const AVATAR_VIEWBOX = '0 -10 48 74';
+const AVATAR_VIEWBOX = '0 -16 48 80';
 const AVATARS = [
-  { id:'a1', label:'Solzinho', svg: `<svg viewBox="${AVATAR_VIEWBOX}">${avatarFace('#FFC93C', SMILE, `<g>${[0,45,90,135,180,225,270,315].map(a=>`<rect x="22.5" y="-8" width="3" height="8" rx="1.5" fill="#FFC93C" transform="rotate(${a} 24 15)"/>`).join('')}</g>`)}</svg>` },
-  { id:'a2', label:'Verdinho', svg: `<svg viewBox="${AVATAR_VIEWBOX}">${avatarFace('#4CAF50', SMILE)}</svg>` },
-  { id:'a3', label:'Azulzinho', svg: `<svg viewBox="${AVATAR_VIEWBOX}">${avatarFace('#42A5F5', OPEN_SMILE)}</svg>` },
-  { id:'a4', label:'Gatinho', svg: `<svg viewBox="${AVATAR_VIEWBOX}">${avatarFace('#FF8A65', SMILE, `<path d="M11 3 L17 13 L8 13 Z" fill="#FF8A65"/><path d="M37 3 L31 13 L40 13 Z" fill="#FF8A65"/>`)}</svg>` },
-  { id:'a5', label:'Roxinho', svg: `<svg viewBox="${AVATAR_VIEWBOX}">${avatarFace('#AB47BC', SMILE)}</svg>` },
-  { id:'a6', label:'Coelhinho', svg: `<svg viewBox="${AVATAR_VIEWBOX}">${avatarFace('#EC407A', OPEN_SMILE, `<rect x="14" y="-9" width="6" height="18" rx="3" fill="#EC407A"/><rect x="28" y="-9" width="6" height="18" rx="3" fill="#EC407A"/>`)}</svg>` },
-  { id:'a7', label:'Ciano', svg: `<svg viewBox="${AVATAR_VIEWBOX}">${avatarFace('#26C6DA', SMILE)}</svg>` },
-  { id:'a8', label:'Nuvem', svg: `<svg viewBox="${AVATAR_VIEWBOX}">${avatarFace('#90CAF9', SMILE, `<ellipse cx="12" cy="17" rx="7" ry="6" fill="#90CAF9"/><ellipse cx="36" cy="17" rx="7" ry="6" fill="#90CAF9"/>`)}</svg>` },
+  { id:'a1', label:'Solzinho', inner: avatarFace('#FFC93C', SMILE, `<g>${[0,45,90,135,180,225,270,315].map(a=>`<rect x="22.5" y="-8" width="3" height="8" rx="1.5" fill="#FFC93C" transform="rotate(${a} 24 15)"/>`).join('')}</g>`) },
+  { id:'a2', label:'Verdinho', inner: avatarFace('#4CAF50', SMILE) },
+  { id:'a3', label:'Azulzinho', inner: avatarFace('#42A5F5', OPEN_SMILE) },
+  { id:'a4', label:'Gatinho', inner: avatarFace('#FF8A65', SMILE, `<path d="M11 3 L17 13 L8 13 Z" fill="#FF8A65"/><path d="M37 3 L31 13 L40 13 Z" fill="#FF8A65"/>`) },
+  { id:'a5', label:'Roxinho', inner: avatarFace('#AB47BC', SMILE) },
+  { id:'a6', label:'Coelhinho', inner: avatarFace('#EC407A', OPEN_SMILE, `<rect x="14" y="-9" width="6" height="18" rx="3" fill="#EC407A"/><rect x="28" y="-9" width="6" height="18" rx="3" fill="#EC407A"/>`) },
+  { id:'a7', label:'Ciano', inner: avatarFace('#26C6DA', SMILE) },
+  { id:'a8', label:'Nuvem', inner: avatarFace('#90CAF9', SMILE, `<ellipse cx="12" cy="17" rx="7" ry="6" fill="#90CAF9"/><ellipse cx="36" cy="17" rx="7" ry="6" fill="#90CAF9"/>`) },
 ];
 let SELECTED_AVATAR = AVATARS[0].id;
+
+// ---------- personalização por categorias (cabelo, chapéu, rosto, pescoço) ----------
+const ACCESSORY_CATEGORIES = [
+  { key:'hair', label:'Cabelo', icon:'💇' },
+  { key:'hat', label:'Chapéu', icon:'🎩' },
+  { key:'face', label:'Rosto', icon:'👓' },
+  { key:'neck', label:'Pescoço', icon:'🎀' },
+];
+const ACCESSORY_OPTIONS = {
+  hair: [
+    { key:'none', label:'Nenhum' },
+    { key:'short', label:'Curto' },
+    { key:'mohawk', label:'Moicano' },
+    { key:'curly', label:'Cacheado' },
+    { key:'ponytail', label:'Rabo de cavalo' },
+  ],
+  hat: [
+    { key:'none', label:'Nenhum' },
+    { key:'cap', label:'Boné' },
+    { key:'tophat', label:'Cartola' },
+    { key:'crown', label:'Coroa' },
+  ],
+  face: [
+    { key:'none', label:'Nenhum' },
+    { key:'glasses', label:'Óculos' },
+    { key:'sunglasses', label:'Óculos escuros' },
+    { key:'mustache', label:'Bigode' },
+  ],
+  neck: [
+    { key:'none', label:'Nenhum' },
+    { key:'bowtie', label:'Gravatinha' },
+    { key:'scarf', label:'Cachecol' },
+  ],
+};
+let SELECTED_ACCESSORIES = { hair:'none', hat:'none', face:'none', neck:'none' };
+let ACTIVE_ACCESSORY_TAB = 'hair';
+
+function hairSvg(key){
+  switch(key){
+    case 'short':
+      return `<path d="M8 5a16 12.5 0 0 1 32 0 L35 9 a13 8.5 0 0 0 -22 0 Z" fill="#3E2723"/>`;
+    case 'mohawk':
+      return `<path d="M21 -14 L27 -14 L25.5 3 L22.5 3 Z" fill="#3E2723"/>`;
+    case 'curly':
+      return `<g fill="#3E2723">${[10,16.5,23,29.5,36].map(x=>`<circle cx="${x}" cy="2" r="4.4"/>`).join('')}</g>`;
+    case 'ponytail':
+      return `<path d="M8 5a16 12.5 0 0 1 32 0 L35 9 a13 8.5 0 0 0 -22 0 Z" fill="#3E2723"/><path d="M38 3 q11 3 8 16 q-3 -7 -9 -9 Z" fill="#3E2723"/>`;
+    default: return '';
+  }
+}
+function hatSvg(key){
+  switch(key){
+    case 'cap':
+      return `<path d="M8 3a16 13 0 0 1 32 0Z" fill="#3E2723"/><rect x="30" y="1" width="15" height="5" rx="2.5" fill="#3E2723"/>`;
+    case 'tophat':
+      return `<rect x="14" y="-15" width="20" height="17" rx="1.5" fill="#212121"/><rect x="9" y="0" width="30" height="4.5" rx="2" fill="#212121"/>`;
+    case 'crown':
+      return `<path d="M9 5 L13 -6 L19.5 2 L24 -9 L28.5 2 L35 -6 L39 5 Z" fill="#FFC93C" stroke="#B8860B" stroke-width="1"/><circle cx="24" cy="-8" r="1.6" fill="#B8860B"/>`;
+    default: return '';
+  }
+}
+function faceSvg(key){
+  switch(key){
+    case 'glasses':
+      return `<g>
+        <circle cx="19" cy="13" r="4.4" fill="none" stroke="#241703" stroke-width="2"/>
+        <circle cx="29" cy="13" r="4.4" fill="none" stroke="#241703" stroke-width="2"/>
+        <line x1="23.4" y1="13" x2="24.6" y2="13" stroke="#241703" stroke-width="2"/>
+        <line x1="14.6" y1="12" x2="10.5" y2="10" stroke="#241703" stroke-width="2" stroke-linecap="round"/>
+        <line x1="33.4" y1="12" x2="37.5" y2="10" stroke="#241703" stroke-width="2" stroke-linecap="round"/>
+      </g>`;
+    case 'sunglasses':
+      return `<g>
+        <circle cx="19" cy="13" r="4.6" fill="#212121"/>
+        <circle cx="29" cy="13" r="4.6" fill="#212121"/>
+        <line x1="23.6" y1="13" x2="24.4" y2="13" stroke="#212121" stroke-width="2"/>
+        <line x1="14.4" y1="12" x2="10.5" y2="10" stroke="#212121" stroke-width="2" stroke-linecap="round"/>
+        <line x1="33.6" y1="12" x2="37.5" y2="10" stroke="#212121" stroke-width="2" stroke-linecap="round"/>
+      </g>`;
+    case 'mustache':
+      return `<path d="M16.5 17 q3.7 -3 7.5 0 q3.8 -3 7.5 0 q-3.7 4.4 -7.5 1.3 q-3.8 3.1 -7.5 -1.3 Z" fill="#3E2723"/>`;
+    default: return '';
+  }
+}
+function neckSvg(key){
+  switch(key){
+    case 'bowtie':
+      return `<g>
+        <path d="M16 27.5 L24 24.5 L24 30.5 Z" fill="#E53935"/>
+        <path d="M32 27.5 L24 24.5 L24 30.5 Z" fill="#E53935"/>
+        <circle cx="24" cy="27.5" r="1.8" fill="#B71C1C"/>
+      </g>`;
+    case 'scarf':
+      return `<path d="M14 26 q10 6 20 0 l-1.5 7 q-8.5 4 -17 0 Z" fill="#E53935"/><rect x="25" y="30" width="5.5" height="15" rx="2.2" fill="#E53935"/>`;
+    default: return '';
+  }
+}
+function accessoriesMarkup(acc){
+  if(!acc) return '';
+  return `${hairSvg(acc.hair)}${hatSvg(acc.hat)}${faceSvg(acc.face)}${neckSvg(acc.neck)}`;
+}
+function avatarInnerById(id){
+  const a = AVATARS.find(x => x.id === id);
+  return a ? a.inner : AVATARS[0].inner;
+}
+function buildAvatarMarkup(id, acc){
+  return `<svg viewBox="${AVATAR_VIEWBOX}">${avatarInnerById(id)}${accessoriesMarkup(acc)}</svg>`;
+}
 
 function renderAvatarGrid(){
   const grid = document.getElementById('avatar-grid');
   if(!grid) return;
   grid.innerHTML = AVATARS.map((a, i) => `
     <div class="avatar-option${a.id===SELECTED_AVATAR ? ' selected' : ''}" title="${a.label}" onclick="selectAvatar('${a.id}')">
-      <span class="avatar-wiggle" style="animation-delay:${(i*0.13).toFixed(2)}s;">${a.svg}</span>
+      <span class="avatar-wiggle" style="animation-delay:${(i*0.13).toFixed(2)}s;"><svg viewBox="${AVATAR_VIEWBOX}">${a.inner}</svg></span>
     </div>
   `).join('');
 }
 function selectAvatar(id){
   SELECTED_AVATAR = id;
   renderAvatarGrid();
+  renderAvatarPreview();
 }
-function avatarSvgById(id){
-  const a = AVATARS.find(x => x.id === id);
-  return a ? a.svg : AVATARS[0].svg;
+function renderAccessoryTabs(){
+  const el = document.getElementById('accessory-tabs');
+  if(!el) return;
+  el.innerHTML = ACCESSORY_CATEGORIES.map(c => `
+    <button type="button" class="accessory-tab${ACTIVE_ACCESSORY_TAB===c.key ? ' active' : ''}" onclick="setAccessoryTab('${c.key}')">${c.icon} ${c.label}</button>
+  `).join('');
 }
-function avatarMini(id, width){
+function setAccessoryTab(key){
+  ACTIVE_ACCESSORY_TAB = key;
+  renderAccessoryTabs();
+  renderAccessoryOptions();
+}
+function renderAccessoryOptions(){
+  const el = document.getElementById('accessory-options');
+  if(!el) return;
+  const opts = ACCESSORY_OPTIONS[ACTIVE_ACCESSORY_TAB];
+  const current = SELECTED_ACCESSORIES[ACTIVE_ACCESSORY_TAB];
+  el.innerHTML = opts.map(o => `
+    <button type="button" class="accessory-opt-btn${current===o.key ? ' active' : ''}" onclick="pickAccessory('${ACTIVE_ACCESSORY_TAB}','${o.key}')">${o.label}</button>
+  `).join('');
+}
+function pickAccessory(cat, key){
+  SELECTED_ACCESSORIES[cat] = key;
+  renderAccessoryOptions();
+  renderAvatarPreview();
+}
+function renderAvatarPreview(){
+  const el = document.getElementById('avatar-preview');
+  if(!el) return;
+  el.innerHTML = buildAvatarMarkup(SELECTED_AVATAR, SELECTED_ACCESSORIES);
+}
+function avatarMini(id, width, acc){
   width = width || 22;
-  const height = Math.round(width * 1.45);
+  const height = Math.round(width * 1.6);
   const idx = Math.max(0, AVATARS.findIndex(a => a.id === id));
   const delay = (idx * 0.13).toFixed(2);
-  return `<span class="avatar-mini" style="width:${width}px;height:${height}px;"><span class="avatar-wiggle" style="animation-delay:${delay}s;">${avatarSvgById(id)}</span></span>`;
+  return `<span class="avatar-mini" style="width:${width}px;height:${height}px;"><span class="avatar-wiggle" style="animation-delay:${delay}s;">${buildAvatarMarkup(id, acc)}</span></span>`;
 }
-document.addEventListener('DOMContentLoaded', renderAvatarGrid);
+document.addEventListener('DOMContentLoaded', () => {
+  renderAvatarGrid();
+  renderAccessoryTabs();
+  renderAccessoryOptions();
+  renderAvatarPreview();
+});
 renderAvatarGrid();
+renderAccessoryTabs();
+renderAccessoryOptions();
+renderAvatarPreview();
 
 // ---------- som de transição (composição original, sem direitos de terceiros) ----------
 function playTransitionSound(){
@@ -1049,7 +1224,7 @@ async function hostTick(){
     if(players.length === 0){
       listEl.innerHTML = '<span class="empty-msg">Aguardando jogadores…</span>';
     } else {
-      listEl.innerHTML = players.map(p => `<span class="player-chip">${avatarMini(p.avatar)} ${escapeHtml(p.name)}</span>`).join('');
+      listEl.innerHTML = players.map(p => `<span class="player-chip">${avatarMini(p.avatar, 22, p.accessories)} ${escapeHtml(p.name)}</span>`).join('');
     }
     document.getElementById('btn-start-quiz').disabled = players.length === 0;
   }
@@ -1159,7 +1334,7 @@ async function joinRoom(){
   PLAYER_NAME = name;
   PLAYER_ID = genId();
 
-  await playerSet(code, PLAYER_ID, { name, avatar: SELECTED_AVATAR, answers: {}, score: 0, joinedAt: Date.now() });
+  await playerSet(code, PLAYER_ID, { name, avatar: SELECTED_AVATAR, accessories: {...SELECTED_ACCESSORIES}, answers: {}, score: 0, joinedAt: Date.now() });
 
   goTo('screen-player-wait');
   startPlayerPolling();
@@ -1244,7 +1419,7 @@ async function submitAnswer(qi, oi, btnEl){
   const correct = oi === q.correct;
   const points = correct ? 1 : 0;
 
-  const me = await playerGet(ROOM_CODE, PLAYER_ID) || { name: PLAYER_NAME, avatar: SELECTED_AVATAR, answers:{}, score:0 };
+  const me = await playerGet(ROOM_CODE, PLAYER_ID) || { name: PLAYER_NAME, avatar: SELECTED_AVATAR, accessories: {...SELECTED_ACCESSORIES}, answers:{}, score:0 };
   me.answers[qi] = { selected: oi, correct, score: points };
   me.score = Object.values(me.answers).reduce((s,a)=>s+a.score, 0);
   await playerSet(ROOM_CODE, PLAYER_ID, me);
@@ -1313,7 +1488,7 @@ function renderQuestionBreakdown(elId, players, qi, highlightKey){
       <div class="leaderboard-row" style="${p.id===highlightKey?'border:1px solid var(--gold);':''}">
         <span class="rank-num">${i+1}</span>
         <span style="width:22px; text-align:center;">${icon}</span>
-        <span class="rank-name">${avatarMini(p.avatar, 14)} ${escapeHtml(p.name)}</span>
+        <span class="rank-name">${avatarMini(p.avatar, 14, p.accessories)} ${escapeHtml(p.name)}</span>
         <span class="rank-score">${fmtPts(p.score)}</span>
       </div>`;
   }).join('');
@@ -1336,7 +1511,7 @@ function renderLeaderboard(elId, players, highlightKey){
     return `
       <div class="podium-col">
         ${place === 1 ? '<div class="podium-trophy">🏆</div>' : ''}
-        <div style="margin:0 auto 2px;">${avatarMini(p.avatar, 30)}</div>
+        <div style="margin:0 auto 2px;">${avatarMini(p.avatar, 30, p.accessories)}</div>
         <div class="podium-name">${escapeHtml(p.name)}</div>
         <div class="podium-score">${fmtPts(p.score)}</div>
         <div class="podium-block place-${place}">${place}</div>
@@ -1349,7 +1524,7 @@ function renderLeaderboard(elId, players, highlightKey){
     html += rest.map((p, i) => `
       <div class="leaderboard-row" style="${p.id===highlightKey?'border:1px solid var(--gold);':''}">
         <span class="rank-num">${i+4}</span>
-        <span class="rank-name">${avatarMini(p.avatar)} ${escapeHtml(p.name)}</span>
+        <span class="rank-name">${avatarMini(p.avatar, 22, p.accessories)} ${escapeHtml(p.name)}</span>
         <span class="rank-score">${fmtPts(p.score)}</span>
       </div>
     `).join('');
